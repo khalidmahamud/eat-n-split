@@ -22,35 +22,52 @@ const initialFriends = [
 	},
 ];
 
-export default function App() {
-	const [friendFormVisibility, setFriendFormVisibility] = useState(false);
+function Button({ children, onClick }) {
+	return (
+		<button
+			className='button'
+			onClick={onClick}
+		>
+			{children}
+		</button>
+	);
+}
 
-	function handleAddFriendButton() {
-		setFriendFormVisibility((visible) => !visible);
+export default function App() {
+	const [friends, setFriends] = useState(initialFriends);
+	const [showAddFriend, setShowAddFriend] = useState(false);
+
+	function handleShowAddFriend() {
+		setShowAddFriend((show) => !show);
+	}
+
+	function handleAddFriend(name, image) {
+		const id = Date.now();
+		const newFriend = {
+			id,
+			name,
+			image: `${image}?=${id}`,
+			balance: 0,
+		};
+		setFriends((friends) => [...friends, newFriend]);
+		setShowAddFriend(false);
 	}
 
 	return (
 		<div className='app'>
 			<div className='sidebar'>
-				<FriendsList />
-				{friendFormVisibility ? (
-					<>
-						<AddFriendForm />
-						<Button handleAddFriendButton={handleAddFriendButton}>Close</Button>
-					</>
-				) : (
-					<Button handleAddFriendButton={handleAddFriendButton}>
-						Add Friend
-					</Button>
-				)}
+				<FriendsList friends={friends} />
+				{showAddFriend && <AddFriendForm handleAddFriend={handleAddFriend} />}
+				<Button onClick={handleShowAddFriend}>
+					{showAddFriend ? 'Close' : 'Add Friend'}
+				</Button>
 			</div>
 			<SplitBillForm />
 		</div>
 	);
 }
 
-function FriendsList() {
-	const friends = initialFriends;
+function FriendsList({ friends }) {
 	return (
 		<ul>
 			{friends.map((friend) => (
@@ -87,28 +104,39 @@ function FriendItem({ friend }) {
 	);
 }
 
-function Button({ children, handleAddFriendButton }) {
-	return (
-		<button
-			className='button'
-			onClick={handleAddFriendButton}
-		>
-			{children}
-		</button>
-	);
-}
+function AddFriendForm({ handleAddFriend }) {
+	const [name, setName] = useState('');
+	const [image, setImage] = useState('https://i.pravatar.cc/48');
 
-function AddFriendForm() {
+	function handleSubmit(e) {
+		e.preventDefault();
+
+		if (!name || !image) return;
+
+		handleAddFriend(name, image);
+		setName('');
+		setImage('https://i.pravatar.cc/48');
+	}
+
 	return (
 		<form
 			action=''
 			className='form-add-friend'
+			onSubmit={handleSubmit}
 		>
 			<label htmlFor=''>👫 Friend Name</label>
-			<input type='text' />
+			<input
+				type='text'
+				value={name}
+				onChange={(e) => setName(e.target.value)}
+			/>
 
 			<label htmlFor=''>🖼️ Image URL</label>
-			<input type='text' />
+			<input
+				type='text'
+				value={image}
+				onChange={(e) => setImage(e.target.value)}
+			/>
 			<Button>Add</Button>
 		</form>
 	);
